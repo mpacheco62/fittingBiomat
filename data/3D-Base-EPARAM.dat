@@ -1,0 +1,108 @@
+VULCAN: 3D, Caso uniaxial, elastico lineal, pequeñas deformaciones y pequeños desplazamientos
+START,NOINITIAL
+$------------------------------------------------CONTROL DATA
+CONTROL_DATA
+$SOLVER,FRONTAL,0                                 !Distintos tipos de solver
+$SOLVER,FRONTAL,0,4
+$SOLVER,PROFILE,1
+$SOLVER,PROFILE,0
+$SOLVER,PCGRADIENT,100,0.001,1
+ SOLVER,PARDISO,1,1                               ! Primer valor significa si la matriz tangente es simétrica (1) o no simetrica (0)
+ SMOOTHING,DISCRETE
+ POSTPROCESS
+END_CONTROL_DATA
+$------------------------------------------------PROBLEM DATA
+PROBLEM_DATA
+ DIMENSIONS: NPOIN=8, NELEM=1, NDIME=3, NNODE=8 \
+             NGAUS=8, NSETS=1, NMATS=1, NFUNC=1   ! NPOIN: Cantidad de nodos
+$                                                   NELEM: Cantidad de elementos
+$                                                   NDIME: La cantidad de dimensiones del problema, 3D=3, axisimétrico=2, tensión plana=2, deformación plana=2
+$                                                   NNODE: Cantidad de nodos necesarios por elemento (Por lo general es la misma cantidad de nodos del elemento)
+$                                                   NSETS: Cantidad de grupos de elementos distintos
+$                                                   NMATS: Cantidad de materiales distintos
+$                                                   NFUNC: Cantidad de funciones para imponer condiciones de contorno
+END_PROBLEM_DATA
+$------------------------------------------------GENERAL DATA
+GENERAL_DATA
+ GEOMETRY,NONINTERPOLATE                               ! Aquí va la malla del problema
+    1    1    1    2    3    4    5    6    7    8     ! Primero se enumeran los elementos como: IELEM ISET NODO1, NODO2, NODO3, NODO4, ....
+    1       0.000        0.000           0.0           ! Luego se definen los nodos como: INODO COORDX COORDY COORDZ
+    2       5.000e-0     0.000           0.0
+    3       5.000e-0     5.000e-0        0.0
+    4       0.000        5.000e-0        0.0
+    5       0.000        0.000           5.000e-0
+    6       5.000e-0     0.000           5.000e-0
+    7       5.000e-0     5.000e-0        5.000e-0
+    8       0.000        5.000e-0        5.000e-0
+ END_GEOMETRY
+$
+ SETS
+  1  1  30  4  1  8  ! NGRUP,IMATS,ITYPE,NTYPE,IRULE,IGAUS  ! AQUI SE DEFINE EL TIPO DE ELEMENTO, OTROS SE ESPECIFICAN MAS ADELANTE
+$                      NGRUP: Es el grupo que se define al crear la malla
+$                      IMATS: Es el material asociado a este grupo
+$                      ITYPE: Es el tipo de elemento
+$                              3: Son elementos de Union nodal
+$                              4: Son elementos de Contacto Nodal
+$                             30: Son elementos Solidos
+$                             32: Son elementos de Contacto
+$                             33: Son elementos para Galerkin Discontinuo
+$                      NTYPE: Se define que tipo de elemento es
+$                             1: Elemento de Tensión Plana
+$                             2: Elemento de Deformación Plana
+$                             3: Elemento Axisimetrico
+$                             4: Elemento 3D
+$                             5: Elemento 1D
+$                      IRULE: Define el tipo de Integración a efectuar
+$                             1: Gaussian
+$                             2: Lobatto
+$                             3: Radau
+$                             4: Irons
+$                             5: Special
+$                      IGAUS: Numero de puntos de integración por elemento
+ END_SETS
+$
+ PROPERTIES
+  MATERIAL=1,SMIEN                !El material es Steel Mechanic Isotropic Elastic Nonthermal, Las unidades para este caso son mm y N, que implican MPa
+   DENSITY=7.850E-06           		! Kg/mm^3
+   YOUNG_MODULUS=%E%      		! MPa
+   POISSON_RATIO=0.25
+   FREE_ENERGY_MODEL=2            !No sé que es esto
+  END_MATERIAL
+$
+ END_PROPERTIES
+END_GENERAL_DATA
+$-----------------------------------------FIRST INTERVAL DATA
+INTERVAL_DATA,1000,0.1            ! El primero numero define la cantidad de pasos y el segundo el paso temporal
+$.........................................FUNCTION DATA
+FUNCTION,NEW_FUNCTION
+ F_NUMBER,1,1
+  1, 0.0, 1000.0, 100.0, 5.0 !tipo,tinicial,tfinal,tconstante,factor    !Aquí se definen las funciones, Referirse al "Manual"
+END_FUNCTION
+$.........................................LOAD DATA
+LOAD,NEW_LOAD                                                           !Aquí se definen las fuerzas impuestas, en este caso no existen
+$ PRINT_LOADS
+END_LOAD_DATA
+$.........................................BOUNDARY DATA
+BOUNDARY_DATA,NEW_BOUNDARY
+    1   111  1   0.000000     0.000000  0.0        ! Se definen las condiciones de borde de desplazamientos
+    2   111  1   1.0e-0       0.000000  0.0        ! Como: (INODE) (COND IMPUES) (IFUNC) (VALOR X IMPUESTO) (VALOR Y IMPUESTO) (VALOR Z IMPUESTO)
+    3   101  1   1.0e-0       0.000000  0.0        ! COND IMPUES: si es 0 está libre, si es 1 está impuesto
+    4   101  1   0.000000     0.000000  0.0        ! COND IMPUES: El primero numero indica X, el segundo Y, el tercero Z
+    5   110  1   0.000000     0.000000  0.0
+    6   110  1   1.0e-0       0.000000  0.0
+    7   100  1   1.0e-0       0.000000  0.0
+    8   100  1   0.000000     0.000000  0.0
+END_BOUNDARY_DATA
+$.........................................STRATEGY DATA
+STRATEGY,NEW_STRATEGY
+ ALGORITHM,UPDATE,2          !No sé
+ CONVERGENCE,TOTAL,200,0.01  ! Define el criterio de convergencia, la cantidad de iteraciones máximas y el error para pasar al siguiente paso
+ POSTPROCESS,1,0             ! Define cada cuantos pasos se imprimen los pasos en el POS, No recuerdo el segundo
+END_STRATREGY_DATA
+$
+$-----------------------------------------END FIRST INTERVAL DATA
+END_INTERVAL_DATA
+$
+$-----------------------------------------STOP ANALYSIS
+STOP
+
