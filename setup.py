@@ -19,5 +19,5 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
     ],
     python_requires='>=3',
-    install_requires=["scipy", "intervul", "numpy"],
+    install_requires=["scipy", "intervul", "numpy", "lmfit"],
 )
